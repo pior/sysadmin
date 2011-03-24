@@ -44,9 +44,11 @@ if __name__ == "__main__":
     try:
         period, times = map(int, sys.argv[1:3])
     except Exception, e:
-        sys.exit("Syntax: systeminspect PERIOD TIMES.\n" + str(e))
+        sys.exit("Syntax: systeminspect PERIOD TIMES (100 max).\n" + str(e))
     if period < 1:
         period = 0.1
+    if times > 200:
+        sys.exit("Number of inspections requested is too large (max=100)")
 
     inspectionid = isodatetime()
 
