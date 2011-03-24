@@ -46,6 +46,8 @@ if __name__ == "__main__":
         period, times = map(int, sys.argv[1:3])
     except Exception, e:
         sys.exit("Syntax: systeminspect PERIOD TIMES.\n" + str(e))
+    if period < 1:
+        period = 0.2
 
     inspectionid = isodatetime()
 
