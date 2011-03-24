@@ -25,8 +25,7 @@ inspectors = ( ("ps", "ps auxf"),
 ##############################################################################
 
 def isodatetime():
-    dt = datetime.datetime.now()
-    return dt.isoformat().split('.')[0]
+    return datetime.datetime.now().isoformat()
     
 def report():
     inspectiontime = isodatetime()
@@ -47,7 +46,7 @@ if __name__ == "__main__":
     except Exception, e:
         sys.exit("Syntax: systeminspect PERIOD TIMES.\n" + str(e))
     if period < 1:
-        period = 0.2
+        period = 0.1
 
     inspectionid = isodatetime()
 
@@ -63,8 +62,6 @@ if __name__ == "__main__":
         f.create_system = 0
     reportzip.close()
 
-
-
     sender = "inspector@" + platform.node()
     recipients = ['pior@mentel.com']
 
@@ -73,7 +70,7 @@ if __name__ == "__main__":
     msg['From'] = sender
     msg['To'] = ', '.join(recipients)
     msg['Subject'] = "Inspection of %s at %s" % (platform.node(),
-                                                 inspectionid)
+                                                 inspectionid.replace('T',' '))
     msg.preamble = "Upgrade your email reader man!"
     attachment = MIMEBase('application', 'zip')
     attachment.set_payload(reportfile.getvalue())
@@ -83,6 +80,5 @@ if __name__ == "__main__":
     msg.attach(attachment)
 
     smtp = smtplib.SMTP()
-    smtp.connect()
     smtp.sendmail(sender, recipients, msg.as_string())
     smtp.close()
