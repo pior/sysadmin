@@ -14,8 +14,8 @@ try:
     from email.mime.base import MIMEBase
     from email.encoders import encode_base64
 except ImportError:
-    from email import MIMEMultipart
-    from email import MIMEBase
+    from email.MIMEMultipart import MIMEMultipart
+    from email.MIMEBase import MIMEBase
     from email.Encoders import encode_base64
 
 inspectors = ( ("ps", "ps auxf"),
