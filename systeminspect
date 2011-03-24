@@ -9,13 +9,14 @@ from StringIO import StringIO
 from zipfile import ZipFile 
 
 import smtplib
-from email import encoders
 try:
     from email.mime.multipart import MIMEMultipart
     from email.mime.base import MIMEBase
+    from email.encoders import encode_base64
 except ImportError:
     from email import MIMEMultipart
     from email import MIMEBase
+    from email.Encoders import encode_base64
 
 inspectors = ( ("ps", "ps auxf"),
                ("mem", "free -m"),
@@ -74,7 +75,7 @@ if __name__ == "__main__":
     msg.preamble = "Upgrade your email reader man!"
     attachment = MIMEBase('application', 'zip')
     attachment.set_payload(reportfile.getvalue())
-    encoders.encode_base64(attachment)
+    encode_base64(attachment)
     attachment.add_header('Content-Disposition', 'attachment',
                           filename="inspect-%s.zip" % inspectionid)
     msg.attach(attachment)
