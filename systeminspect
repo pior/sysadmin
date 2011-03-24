@@ -1,0 +1,85 @@
+#!/usr/bin/env python
+import os
+import sys
+import time
+import datetime
+import subprocess
+import platform
+from StringIO import StringIO
+from zipfile import ZipFile 
+
+import smtplib
+from email import encoders
+try:
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.base import MIMEBase
+except ImportError:
+    from email import MIMEMultipart
+    from email import MIMEBase
+
+inspectors = ( ("ps", "ps auxf"),
+               ("mem", "free -m"),
+               ("top", "top -bn1") )
+
+##############################################################################
+
+def isodatetime():
+    dt = datetime.datetime.now()
+    return dt.isoformat().split('.')[0]
+    
+def report():
+    inspectiontime = isodatetime()
+    procs = []
+    for name, cmd in inspectors:
+        p = subprocess.Popen(cmd.split(),
+                             stderr=subprocess.STDOUT,
+                             stdout=subprocess.PIPE)
+        procs.append((name, p))
+    for name, p in procs:
+        p.wait()
+        reportzip.writestr("%s-%s.txt" % (inspectiontime, name),
+                           p.communicate()[0])
+       
+if __name__ == "__main__":
+    try:
+        period, times = map(int, sys.argv[1:3])
+    except Exception, e:
+        sys.exit("Syntax: systeminspect PERIOD TIMES.\n" + str(e))
+
+    inspectionid = isodatetime()
+
+    reportfile = StringIO()
+    reportzip = ZipFile(reportfile, "w")  
+
+    for _ in range(times):
+        report() 
+        time.sleep(period)
+
+    # fix for Linux zip files read in Windows  
+    for f in reportzip.filelist:  
+        f.create_system = 0
+    reportzip.close()
+
+
+
+    sender = "inspector@" + platform.node()
+    recipients = ['pior@mentel.com']
+
+    msg = MIMEMultipart()
+    import platform
+    msg['From'] = sender
+    msg['To'] = ', '.join(recipients)
+    msg['Subject'] = "Inspection of %s at %s" % (platform.node(),
+                                                 inspectionid)
+    msg.preamble = "Upgrade your email reader man!"
+    attachment = MIMEBase('application', 'zip')
+    attachment.set_payload(reportfile.getvalue())
+    encoders.encode_base64(attachment)
+    attachment.add_header('Content-Disposition', 'attachment',
+                          filename="inspect-%s.zip" % inspectionid)
+    msg.attach(attachment)
+
+    smtp = smtplib.SMTP()
+    smtp.connect()
+    smtp.sendmail(sender, recipients, msg.as_string())
+    smtp.close()
