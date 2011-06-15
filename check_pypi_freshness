@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+
+import datetime
+import urllib.request
+import sys
+
+HOUR = 3600
+DAY = 24 * HOUR
+
+if __name__ == "__main__":
+    try:
+        url = '%s/last-modified' % sys.argv[1]
+        ht = urllib.request.urlopen(url)
+        last_modified = ht.read().strip()
+    except IndexError:
+        sys.exit("Syntax: %s PypiBaseURL (ex: http://pypi.exemple.com)" % sys.argv[0])
+    except Exception as e:
+        sys.exit("Can't read pypi repo last-modified:\n%s" % str(e))
+
+    try:
+        last_modified_parsed = datetime.datetime.strptime(last_modified.decode('ascii'), "%Y%m%dT%H:%M:%S")
+    except ValueError as e:
+        sys.exit("Can't parse data:\n%s" %  e)
+
+    delay = datetime.datetime.now() - last_modified_parsed
+    delay_in_sec = delay.total_seconds()
+    if delay_in_sec < - DAY:
+        sys.exit("ERROR: The pypi repo is too old: %s" % str(delay))
